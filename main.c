@@ -1,57 +1,45 @@
 /*============================================================================*/
-#include <stdio.h>
-#include <rt_misc.h>
-
+#include "g2stdioRemap.h"
 #include "stm32f4xx.h"
 /*============================================================================*/
-#pragma import(__use_no_semihosting_swi)
-/*============================================================================*/
-#define ITM_Port8(n)    (*((volatile unsigned char *)(0xE0000000+4*n)))
-#define ITM_Port16(n)   (*((volatile unsigned short*)(0xE0000000+4*n)))
-#define ITM_Port32(n)   (*((volatile unsigned long *)(0xE0000000+4*n)))
-
-#define DEMCR           (*((volatile unsigned long *)(0xE000EDFC)))
-#define TRCENA          0x01000000
-/*============================================================================*/
-struct __FILE { int handle; /* Add whatever you need here */ };
-FILE __stdout;
-FILE __stdin;
-
-int fputc(int c, FILE *f)
+int i = 0, j = 0, k = 0;
+void f1(char c)
 {
-	if (DEMCR & TRCENA) {
-    while (ITM_Port32(0) == 0);
-    ITM_Port8(0) = c;
-  }
-  return c;
+	i+= c;
 }
 
-int fgetc(FILE *f) 
+void f2(char c)
 {
-  return 0;
+	j+= c;
 }
-
-int ferror(FILE *f)
+void f3(char c)
 {
-  /* Your implementation of ferror */
-  return EOF;
-}
-
-void _ttywrch(int c) 
-{
-  return;
-}
-
-void _sys_exit(int return_code) 
-{
-	while(1);  /* endless loop */
+	k-= c;
 }
 /*============================================================================*/
 int main(void)
 {
+	FILE *a, *b, *c;
+	
+	initializeStdio();
+	
+	addStdioEntry("pierwszy", f1, NULL);
+	addStdioEntry("drugi", f2, NULL);
+	addStdioEntry("trzeci", f3, NULL);
+	
+	a = fopen("pierwszy", "w+");
+	b = fopen("drugi", "w+");
+	c = fopen("trzeci", "w+");
+	
 	printf("Witaj swiecie :)\n");
 	
-	while(1);
+	fprintf(a, "Hello :)");
+	fprintf(b, "Hello world :)");
+	fprintf(c, "Witaj swiecie haha");
+	
+	printf("Wartosci zmiennych:\ni = %d\nj = %d\nk = %d\n", i, j, k);
+	
+	return 88;
 }
 /*============================================================================*/
 /*                                    EOF                                     */
